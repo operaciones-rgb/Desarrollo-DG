@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plan DG — Rodrigo Pedroza</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="grain"></div>
+
+<header>
+  <div class="header-inner">
+    <div class="header-left">
+      <span class="logo-mark">R·P</span>
+      <div>
+        <h1>Plan hacia Dirección General</h1>
+        <p class="header-sub">Rodrigo Pedroza · Inicio 19 mayo 2026</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="week-pill">Semana <span id="current-week">—</span></div>
+      <button class="checkin-trigger" onclick="openCheckin()">Check-in semanal →</button>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- KPI ROW -->
+  <section class="kpi-row">
+    <div class="kpi-card">
+      <span class="kpi-label">Completado</span>
+      <span class="kpi-val" id="kpi-pct">0%</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-label">Items listos</span>
+      <span class="kpi-val" id="kpi-done">0 / 42</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-label">Fase activa</span>
+      <span class="kpi-val" id="kpi-fase">Fase 1</span>
+    </div>
+    <div class="kpi-card kpi-reto">
+      <span class="kpi-label">Reto del mes</span>
+      <span class="kpi-val kpi-reto-val" id="kpi-reto-days">— días</span>
+    </div>
+  </section>
+
+  <!-- PROGRESS BARS -->
+  <section class="progress-section">
+    <div class="prog-item">
+      <div class="prog-meta"><span>Fase 1 — Fundamentos</span><span id="prog-f1-txt">0%</span></div>
+      <div class="prog-track"><div class="prog-fill f1" id="prog-f1"></div></div>
+    </div>
+    <div class="prog-item">
+      <div class="prog-meta"><span>Fase 2 — Visión estratégica</span><span id="prog-f2-txt">0%</span></div>
+      <div class="prog-track"><div class="prog-fill f2" id="prog-f2"></div></div>
+    </div>
+    <div class="prog-item">
+      <div class="prog-meta"><span>Fase 3 — Nivel DG</span><span id="prog-f3-txt">0%</span></div>
+      <div class="prog-track"><div class="prog-fill f3" id="prog-f3"></div></div>
+    </div>
+    <div class="prog-item">
+      <div class="prog-meta"><span>Coaching ejecutivo</span><span id="prog-co-txt">0%</span></div>
+      <div class="prog-track"><div class="prog-fill co" id="prog-co"></div></div>
+    </div>
+  </section>
+
+  <!-- RETO MENSUAL -->
+  <section class="reto-section" id="reto-block">
+    <div class="reto-header">
+      <span class="reto-tag">Reto del mes 1</span>
+      <span class="reto-deadline" id="reto-deadline">Entrega: 19 jun 2026</span>
+    </div>
+    <h2 class="reto-title">Diagnóstico financiero ejecutivo</h2>
+    <p class="reto-desc">Toma los estados financieros de IMPORVID del último trimestre y prepara una presentación de 5 slides como si se la presentaras al consejo. Incluye: resumen P&L, flujo de caja, 3 riesgos y 2 oportunidades. El objetivo no es perfección — es pensar y comunicar como DG.</p>
+    <button class="reto-submit-btn" onclick="openReto()">Entregar reto al coach →</button>
+  </section>
+
+  <!-- TABS -->
+  <div class="tabs-row">
+    <button class="tab active" data-phase="all">Todas</button>
+    <button class="tab" data-phase="f1">Fase 1</button>
+    <button class="tab" data-phase="f2">Fase 2</button>
+    <button class="tab" data-phase="f3">Fase 3</button>
+    <button class="tab" data-phase="co">Coaching</button>
+    <button class="tab" data-phase="now">Esta semana</button>
+  </div>
+
+  <!-- CHECKLIST -->
+  <section class="checklist-section" id="checklist-container">
+    <!-- rendered by JS -->
+  </section>
+
+</main>
+
+<!-- CHECK-IN MODAL -->
+<div class="modal-overlay" id="checkin-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeCheckin()">✕</button>
+    <h2 class="modal-title">Check-in semanal</h2>
+    <p class="modal-sub">Semana <span id="modal-week-num">1</span> · <span id="modal-week-dates"></span></p>
+
+    <div class="questions">
+      <div class="q-block">
+        <label class="q-label"><span class="q-num">01</span>¿Qué completaste esta semana?</label>
+        <textarea id="q1" placeholder="Cursos, lecturas, acciones que terminaste..."></textarea>
+      </div>
+      <div class="q-block">
+        <label class="q-label"><span class="q-num">02</span>¿Qué no pudiste hacer y por qué?</label>
+        <textarea id="q2" placeholder="Bloqueos, imprevistos, falta de tiempo..."></textarea>
+      </div>
+      <div class="q-block">
+        <label class="q-label"><span class="q-num">03</span>¿Qué insight ejecutivo te llevas?</label>
+        <textarea id="q3" placeholder="Algo que entendiste diferente, una idea que conectaste..."></textarea>
+      </div>
+      <div class="q-block">
+        <label class="q-label"><span class="q-num">04</span>¿Cómo lo aplicaste en tu trabajo real?</label>
+        <textarea id="q4" placeholder="En IMPORVID, HUERPEL, coaching con clientes..."></textarea>
+      </div>
+    </div>
+
+    <button class="modal-submit" id="checkin-submit-btn" onclick="submitCheckin()">
+      <span id="checkin-btn-text">Enviar al coach</span>
+      <span id="checkin-spinner" class="spinner hidden"></span>
+    </button>
+
+    <div class="coach-response hidden" id="coach-response">
+      <div class="coach-avatar">Coach</div>
+      <div class="coach-bubble" id="coach-bubble"></div>
+    </div>
+  </div>
+</div>
+
+<!-- RETO MODAL -->
+<div class="modal-overlay" id="reto-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeReto()">✕</button>
+    <h2 class="modal-title">Entregar reto mensual</h2>
+    <p class="modal-sub">Reto 1 — Diagnóstico financiero ejecutivo</p>
+    <div class="q-block">
+      <label class="q-label"><span class="q-num">→</span>Describe o comparte tu trabajo</label>
+      <textarea id="reto-input" rows="6" placeholder="Describe qué hiciste, qué encontraste, qué fue difícil, qué conclusiones sacaste. Si tienes slides, pega el link de Drive aquí."></textarea>
+    </div>
+    <button class="modal-submit" id="reto-submit-btn" onclick="submitReto()">
+      <span id="reto-btn-text">Enviar al coach</span>
+      <span id="reto-spinner" class="spinner hidden"></span>
+    </button>
+    <div class="coach-response hidden" id="reto-response">
+      <div class="coach-avatar">Coach</div>
+      <div class="coach-bubble" id="reto-bubble"></div>
+    </div>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

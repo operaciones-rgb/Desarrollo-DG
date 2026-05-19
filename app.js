@@ -1,6 +1,6 @@
 // ── CONFIG ────────────────────────────────────────────────────────────────
 // Set these in your Vercel environment variables:
-// APPS_SCRIPT_URL  → your Google Apps Script deployment URL
+// APPS_SCRIPT_URL  → https://script.google.com/a/macros/imporvid.mx/s/AKfycbzEq_JZ3wm4_wwQKH9FMHDAi3dqagt5kGksaCIlghYHnPaICqwpbxuLr43GJvdqMftNmA/exec
 // (Claude API key is handled server-side via /api/coach)
 
 const APPS_SCRIPT_URL = window.APPS_SCRIPT_URL || '';

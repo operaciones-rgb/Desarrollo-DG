@@ -1,4 +1,9 @@
-const APPS_SCRIPT_URL = 'https://script.google.com/a/macros/imporvid.mx/s/AKfycbzEq_JZ3wm4_wwQKH9FMHDAi3dqagt5kGksaCIlghYHnPaICqwpbxuLr43GJvdqMftNmA/exec';
+// ── CONFIG ────────────────────────────────────────────────────────────────
+// Set these in your Vercel environment variables:
+// APPS_SCRIPT_URL  → your Google Apps Script deployment URL
+// (Claude API key is handled server-side via /api/coach)
+
+const APPS_SCRIPT_URL = window.APPS_SCRIPT_URL || '';
 
 // ── STATE ─────────────────────────────────────────────────────────────────
 let state = {};
@@ -356,7 +361,252 @@ document.getElementById('reto-modal').addEventListener('click', e => {
   if (e.target === document.getElementById('reto-modal')) closeReto();
 });
 
+// ── ASISTENTE DE DUDAS ────────────────────────────────────────────────────
+let askOpen = false;
+let askHistory = []; // {role, content}
+
+function toggleAskSection() {
+  askOpen = !askOpen;
+  const body = document.getElementById('ask-body');
+  const chevron = document.getElementById('ask-chevron');
+  body.classList.toggle('open', askOpen);
+  chevron.classList.toggle('open', askOpen);
+}
+
+function openAsk() {
+  if (!askOpen) toggleAskSection();
+  setTimeout(() => document.getElementById('ask-input')?.focus(), 200);
+}
+
+function fillQuestion(text) {
+  const ta = document.getElementById('ask-input');
+  ta.value = text;
+  ta.focus();
+}
+
+async function submitAsk() {
+  const input = document.getElementById('ask-input');
+  const question = input.value.trim();
+  if (!question) return;
+
+  input.value = '';
+  const btn = document.getElementById('ask-send-btn');
+  btn.disabled = true;
+  document.getElementById('ask-btn-text').classList.add('hidden');
+  document.getElementById('ask-spinner').classList.remove('hidden');
+
+  // Mostrar mensaje del usuario
+  appendAskMsg('user', question);
+
+  // Typing indicator
+  const typingId = appendTyping();
+
+  // Construir prompt con historial
+  askHistory.push({ role: 'user', content: question });
+
+  const systemPrompt = `Eres el coach ejecutivo personal de Rodrigo Pedroza, quien está siguiendo un plan de desarrollo para llegar a Dirección General. Rodrigo trabaja en Monterrey, México, maneja IMPORVID SAPI DE CV (distribución de vino y panaderías Masa Madre) y hace coaching ejecutivo a mandos medios (programa HUERPEL). Su plan incluye cursos en Coursera y edX de universidades como Wharton, Harvard, Stanford, MIT y HEC Paris.
+
+Cuando Rodrigo pregunta sobre inscripciones, cursos o decisiones del programa, responde de forma directa, práctica y amigable. Si pregunta cómo inscribirse a un curso, explica paso a paso. Si tiene dudas sobre pagar vs auditar, oriéntalo (generalmente auditar es suficiente al inicio). Sé conciso — máximo 3-4 párrafos o pasos numerados cuando sea necesario. Sin bullet points excesivos. Habla en español mexicano natural.`;
+
+  try {
+    const res = await fetch('/api/coach', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt: question,
+        system: systemPrompt,
+        history: askHistory.slice(-6) // últimas 3 rondas
+      })
+    });
+    const data = await res.json();
+    const reply = data.response || 'No pude generar respuesta. Intenta de nuevo.';
+
+    removeTyping(typingId);
+    appendAskMsg('coach', reply);
+    askHistory.push({ role: 'assistant', content: reply });
+
+  } catch(e) {
+    removeTyping(typingId);
+    appendAskMsg('coach', 'Error de conexión. Verifica tu internet e intenta de nuevo.');
+  }
+
+  btn.disabled = false;
+  document.getElementById('ask-btn-text').classList.remove('hidden');
+  document.getElementById('ask-spinner').classList.add('hidden');
+}
+
+function appendAskMsg(role, text) {
+  const conv = document.getElementById('ask-conversation');
+  const div = document.createElement('div');
+  div.className = `ask-msg ${role}`;
+  const avatar = role === 'coach' ? 'Coach' : 'Tú';
+  div.innerHTML = `
+    <div class="ask-avatar">${avatar}</div>
+    <div class="ask-bubble">${text}</div>
+  `;
+  conv.appendChild(div);
+  conv.scrollTop = conv.scrollHeight;
+  return div;
+}
+
+function appendTyping() {
+  const conv = document.getElementById('ask-conversation');
+  const id = 'typing-' + Date.now();
+  const div = document.createElement('div');
+  div.className = 'ask-msg coach';
+  div.id = id;
+  div.innerHTML = `
+    <div class="ask-avatar">Coach</div>
+    <div class="ask-bubble">
+      <div class="ask-typing"><span></span><span></span><span></span></div>
+    </div>`;
+  conv.appendChild(div);
+  conv.scrollTop = conv.scrollHeight;
+  return id;
+}
+
+function removeTyping(id) {
+  const el = document.getElementById(id);
+  if (el) el.remove();
+}
+
+// Enter para enviar (Shift+Enter = nueva línea)
+document.addEventListener('DOMContentLoaded', () => {
+  const ta = document.getElementById('ask-input');
+  if (ta) {
+    ta.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        submitAsk();
+      }
+    });
+  }
+});
+
 // ── INIT ──────────────────────────────────────────────────────────────────
 loadState();
 renderKPIs();
 renderChecklist();
+
+// ── ASISTENTE ─────────────────────────────────────────────────────────────
+let chatHistory = [];
+
+function openAsistente() {
+  document.getElementById('asistente-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => document.getElementById('asistente-input').focus(), 200);
+}
+
+function closeAsistente() {
+  document.getElementById('asistente-modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+document.getElementById('asistente-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('asistente-modal')) closeAsistente();
+});
+
+function handleAsisteEnter(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendAsistente();
+  }
+}
+
+function askSugg(text) {
+  document.getElementById('asistente-input').value = text;
+  sendAsistente();
+}
+
+function appendMsg(role, text) {
+  const history = document.getElementById('chat-history');
+  const isUser = role === 'user';
+
+  const msg = document.createElement('div');
+  msg.className = 'chat-msg ' + (isUser ? 'user-msg' : 'coach-msg');
+
+  if (isUser) {
+    msg.innerHTML = `
+      <div class="user-avatar">R</div>
+      <div class="user-bubble">${text.replace(/\n/g,'<br>')}</div>`;
+  } else {
+    msg.innerHTML = `
+      <div class="coach-avatar">Coach</div>
+      <div class="coach-bubble" id="bubble-${Date.now()}">${text.replace(/\n/g,'<br>')}</div>`;
+  }
+
+  history.appendChild(msg);
+  history.scrollTop = history.scrollHeight;
+  return msg;
+}
+
+function showTyping() {
+  const history = document.getElementById('chat-history');
+  const msg = document.createElement('div');
+  msg.className = 'chat-msg coach-msg';
+  msg.id = 'typing-indicator';
+  msg.innerHTML = `
+    <div class="coach-avatar">Coach</div>
+    <div class="coach-bubble typing-indicator">
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+    </div>`;
+  history.appendChild(msg);
+  history.scrollTop = history.scrollHeight;
+}
+
+function removeTyping() {
+  const el = document.getElementById('typing-indicator');
+  if (el) el.remove();
+}
+
+async function sendAsistente() {
+  const input = document.getElementById('asistente-input');
+  const text = input.value.trim();
+  if (!text) return;
+
+  const sendBtn = document.getElementById('asistente-send');
+  sendBtn.disabled = true;
+  document.getElementById('send-text').classList.add('hidden');
+  document.getElementById('send-spinner').classList.remove('hidden');
+
+  input.value = '';
+  appendMsg('user', text);
+  chatHistory.push({ role: 'user', content: text });
+
+  showTyping();
+
+  const all = allItems();
+  const done = all.filter(it => state[it.id]).length;
+  const wn = currentWeekNum();
+  const pct = Math.round(done / all.length * 100);
+
+  const systemPrompt = `Eres el coach ejecutivo personal de Rodrigo Pedroza, quien está en un programa de desarrollo hacia Dirección General. Contexto clave:
+- Trabaja en IMPORVID SAPI DE CV en Monterrey (distribución de vino y franquicia de panadería Masa Madre)
+- Hace coaching ejecutivo a mandos medios (programa HUERPEL con 11 coaches)
+- Objetivo: llegar a nivel Dirección General sin maestría, usando cursos online
+- Semana actual del programa: ${wn} de 80
+- Progreso: ${pct}% completado (${done} de ${all.length} items)
+- Plataforma de cursos: Coursera y edX (auditar gratis, pagar solo certificado)
+- Plan: Fase 1 (fundamentos: finanzas, estrategia, liderazgo), Fase 2 (marketing, talento, tech, negociación), Fase 3 (presencia DG, gobierno corporativo)
+
+Responde preguntas prácticas sobre: cómo inscribirse a cursos, qué hacer cuando hay confusión en una plataforma, dudas sobre el programa, priorizaciones, cómo aplicar lo aprendido, etc. Sé directo, amigable y práctico. Máximo 3 párrafos. Sin bullet points excesivos. Si es una duda técnica de plataforma (Coursera, edX), da instrucciones paso a paso claras.`;
+
+  const prompt = buildAsistePrompt(systemPrompt, chatHistory);
+
+  const response = await callCoachAPI(prompt);
+  removeTyping();
+
+  chatHistory.push({ role: 'assistant', content: response });
+  appendMsg('coach', response);
+
+  sendBtn.disabled = false;
+  document.getElementById('send-text').classList.remove('hidden');
+  document.getElementById('send-spinner').classList.add('hidden');
+}
+
+function buildAsistePrompt(system, history) {
+  const conv = history.map(m => `${m.role === 'user' ? 'Rodrigo' : 'Coach'}: ${m.content}`).join('\n\n');
+  return `${system}\n\nConversación:\n${conv}\n\nResponde como Coach:`;
+}

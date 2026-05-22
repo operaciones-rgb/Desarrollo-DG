@@ -23,7 +23,9 @@
     </div>
     <div class="header-right">
       <div class="week-pill">Semana <span id="current-week">—</span></div>
+      <button class="asistente-trigger" onclick="openAsistente()">💬 Pregúntale al coach</button>
       <button class="checkin-trigger" onclick="openCheckin()">Check-in semanal →</button>
+      <button class="ask-trigger" onclick="openAsk()" title="Pregúntale al coach">💬</button>
     </div>
   </div>
 </header>
@@ -79,6 +81,40 @@
     <h2 class="reto-title">Diagnóstico financiero ejecutivo</h2>
     <p class="reto-desc">Toma los estados financieros de IMPORVID del último trimestre y prepara una presentación de 5 slides como si se la presentaras al consejo. Incluye: resumen P&L, flujo de caja, 3 riesgos y 2 oportunidades. El objetivo no es perfección — es pensar y comunicar como DG.</p>
     <button class="reto-submit-btn" onclick="openReto()">Entregar reto al coach →</button>
+  </section>
+
+  <!-- ASISTENTE FLOTANTE -->
+  <section class="ask-section">
+    <div class="ask-header" onclick="toggleAskSection()">
+      <div class="ask-header-left">
+        <span class="ask-icon">💬</span>
+        <div>
+          <div class="ask-title">Pregúntale al coach</div>
+          <div class="ask-subtitle">Dudas sobre cursos, inscripciones, decisiones del programa...</div>
+        </div>
+      </div>
+      <span class="ask-chevron" id="ask-chevron">▼</span>
+    </div>
+
+    <div class="ask-body" id="ask-body">
+      <div class="ask-suggestions">
+        <span class="ask-chip" onclick="fillQuestion('¿Cómo me inscribo al curso de Wharton en Coursera sin pagar?')">¿Cómo auditar un curso gratis en Coursera?</span>
+        <span class="ask-chip" onclick="fillQuestion('¿Cuánto tiempo necesito por semana para el curso de Wharton Finance?')">¿Cuánto tiempo necesito por semana?</span>
+        <span class="ask-chip" onclick="fillQuestion('¿Vale la pena pagar el certificado de Coursera o solo auditar?')">¿Vale la pena pagar el certificado?</span>
+        <span class="ask-chip" onclick="fillQuestion('¿Cómo cuento mis horas actuales de coaching para la certificación ICF ACC?')">¿Cómo cuento mis horas para ICF?</span>
+        <span class="ask-chip" onclick="fillQuestion('Quiero empezar con el reto mensual del diagnóstico financiero, ¿por dónde comienzo?')">¿Por dónde empiezo el reto del mes?</span>
+      </div>
+
+      <div class="ask-input-row">
+        <textarea id="ask-input" placeholder="Escribe tu duda aquí... ej: me sale una pantalla de pago en Coursera, ¿qué hago?" rows="2"></textarea>
+        <button class="ask-send-btn" id="ask-send-btn" onclick="submitAsk()">
+          <span id="ask-btn-text">→</span>
+          <span id="ask-spinner" class="spinner hidden"></span>
+        </button>
+      </div>
+
+      <div class="ask-conversation" id="ask-conversation"></div>
+    </div>
   </section>
 
   <!-- TABS -->
@@ -153,6 +189,39 @@
     <div class="coach-response hidden" id="reto-response">
       <div class="coach-avatar">Coach</div>
       <div class="coach-bubble" id="reto-bubble"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ASISTENTE MODAL -->
+<div class="modal-overlay" id="asistente-modal">
+  <div class="modal asistente-modal-inner">
+    <button class="modal-close" onclick="closeAsistente()">✕</button>
+    <h2 class="modal-title">Asistente del programa</h2>
+    <p class="modal-sub">Pregúntame cualquier duda sobre tu plan de desarrollo, los cursos, cómo inscribirte, o qué hacer en cada etapa.</p>
+
+    <div class="chat-history" id="chat-history">
+      <div class="chat-msg coach-msg">
+        <div class="coach-avatar">Coach</div>
+        <div class="coach-bubble">Hola Rodrigo. Estoy aquí para resolver cualquier duda sobre tu programa — desde cómo inscribirte a un curso hasta qué hacer si te atascas en alguna fase. ¿En qué te ayudo?</div>
+      </div>
+    </div>
+
+    <div class="chat-input-row">
+      <textarea id="asistente-input" placeholder="Escribe tu pregunta aquí..." rows="2" onkeydown="handleAsisteEnter(event)"></textarea>
+      <button class="send-btn" id="asistente-send" onclick="sendAsistente()">
+        <span id="send-text">↑</span>
+        <span id="send-spinner" class="spinner hidden"></span>
+      </button>
+    </div>
+
+    <div class="chat-suggestions">
+      <span class="sugg-label">Preguntas frecuentes:</span>
+      <button class="sugg-btn" onclick="askSugg('¿Cómo me inscribo gratis al curso de Wharton Finance en Coursera?')">¿Cómo me inscribo gratis en Coursera?</button>
+      <button class="sugg-btn" onclick="askSugg('¿Cuántas horas a la semana necesito para la Fase 1?')">¿Cuántas horas por semana?</button>
+      <button class="sugg-btn" onclick="askSugg('¿Qué diferencia hay entre auditar y pagar el certificado en Coursera?')">¿Auditar vs pagar certificado?</button>
+      <button class="sugg-btn" onclick="askSugg('¿Qué cursos puedo tomar en paralelo para avanzar más rápido?')">¿Puedo tomar cursos en paralelo?</button>
+      <button class="sugg-btn" onclick="askSugg('¿Cómo califico para el ICF ACC con mis horas actuales de coaching?')">¿Cómo califico para ICF ACC?</button>
     </div>
   </div>
 </div>

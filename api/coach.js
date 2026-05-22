@@ -1,9 +1,11 @@
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { prompt } = req.body;
+  const { prompt } = req.body || {};
   if (!prompt) return res.status(400).json({ error: 'Missing prompt' });
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -18,22 +20,23 @@ export default async function handler(req, res) {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 600,
+        model: 'claude-opus-4-5',
+        max_tokens: 1024,
         messages: [{ role: 'user', content: prompt }]
       })
     });
 
+    const text = await response.text();
+
     if (!response.ok) {
-      const err = await response.text();
-      return res.status(500).json({ error: 'Anthropic API error', detail: err });
+      return res.status(500).json({ error: 'Anthropic error', detail: text });
     }
 
-    const data = await response.json();
-    const text = data.content?.[0]?.text || '';
-    return res.status(200).json({ response: text });
+    const data = JSON.parse(text);
+    const reply = data.content?.[0]?.text || '';
+    return res.status(200).json({ response: reply });
 
-  } catch (e) {
+  } catch(e) {
     return res.status(500).json({ error: e.message });
   }
 }

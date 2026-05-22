@@ -20,14 +20,13 @@ export default async function handler(req, res) {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-opus-4-5',
+        model: 'claude-haiku-4-5-20251001',
         max_tokens: 1024,
         messages: [{ role: 'user', content: prompt }]
       })
     });
 
     const text = await response.text();
-
     if (!response.ok) {
       return res.status(500).json({ error: 'Anthropic error', detail: text });
     }
